@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main
+      - main  # Trigger workflow on pushes to the main branch
 
 jobs:
   build-and-deploy:
@@ -21,6 +21,8 @@ jobs:
       # Step 3: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
+        with:
+          region: us-east-2  # Specify your AWS region
 
       # Step 4: Build and Push Backend Image
       - name: Build and Push Backend Docker Image
@@ -28,20 +30,24 @@ jobs:
           docker build -t ${{ secrets.ECR_BACKEND }}:latest ./backend
           docker push ${{ secrets.ECR_BACKEND }}:latest
         env:
-          ECR_BACKEND: 207567756831.dkr.ecr.us-east-2.amazonaws.com/backend
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
+
       # Step 5: Build and Push Frontend Image
       - name: Build and Push Frontend Docker Image
         run: |
           docker build -t ${{ secrets.ECR_FRONTEND }}:latest ./frontend
           docker push ${{ secrets.ECR_FRONTEND }}:latest
         env:
-          ECR_FRONTEND: 207567756831.dkr.ecr.us-east-2.amazonaws.com/frontend
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
 
       # Step 6: Configure AWS CLI (for interacting with EKS)
       - name: Configure AWS CLI
         run: |
-          aws eks --region us-east-2 update-kubeconfig --name eks
-        env:
+          aws eks --region us-east-2 update-kubeconfig --name eks  
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: us-east-2
@@ -51,11 +57,11 @@ jobs:
         run: |
           kubectl apply -f k8s/backend-deployment.yaml
         env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}  # Ensure this secret is correctly set
 
       # Step 8: Deploy Frontend Service and Pods to EKS
       - name: Apply Frontend Kubernetes Config
         run: |
           kubectl apply -f k8s/frontend-deployment.yaml
         env:
-          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}  # Ensure this secret is correctly set
