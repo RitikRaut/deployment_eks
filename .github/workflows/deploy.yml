@@ -10,50 +10,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout Code
       - name: Checkout Code
         uses: actions/checkout@v2
 
+      # Step 2: Set up Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
+      # Step 3: Log in to Amazon ECR
       - name: Log in to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
-        with:
-          region: us-east-2  # You can hard-code your AWS region here
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
 
+      # Step 4: Build and Push Backend Docker Image
       - name: Build and Push Backend Docker Image
         run: |
-          docker build -t 207567756831.dkr.ecr.us-east-2.amazonaws.com/backend:latest ./backend
-          docker push 207567756831.dkr.ecr.us-east-2.amazonaws.com/backend:latest
+          docker build -t ${{ secrets.ECR_BACKEND }}:latest ./backend
+          docker push ${{ secrets.ECR_BACKEND }}:latest
         env:
-          AWS_ACCESS_KEY_ID: AKIATAVAATYPZUOCJJPA  # Hard-code your AWS Access Key here
-          AWS_SECRET_ACCESS_KEY: pKq2pdhAvQh0A/tKE8mh5htIeSrhTF+diFQuau9B  # Hard-code your AWS Secret Access Key here
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
 
+      # Step 5: Build and Push Frontend Docker Image
       - name: Build and Push Frontend Docker Image
         run: |
-          docker build -t 207567756831.dkr.ecr.us-east-2.amazonaws.com/frontend:latest ./frontend
-          docker push 207567756831.dkr.ecr.us-east-2.amazonaws.com/frontend:latest
+          docker build -t ${{ secrets.ECR_FRONTEND }}:latest ./frontend
+          docker push ${{ secrets.ECR_FRONTEND }}:latest
         env:
-          AWS_ACCESS_KEY_ID: AKIATAVAATYPZUOCJJPA
-          AWS_SECRET_ACCESS_KEY: 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
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
 
+      # Step 6: Configure AWS CLI for EKS
       - name: Configure AWS CLI
         run: |
           aws eks --region us-east-2 update-kubeconfig --name eks
         env:
-          AWS_ACCESS_KEY_ID: AKIATAVAATYPZUOCJJPA
-          AWS_SECRET_ACCESS_KEY: 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
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-2
 
+      # Step 7: Apply Backend Kubernetes Config
       - name: Apply Backend Kubernetes Config
         run: |
           kubectl apply -f k8s/backend-deployment.yaml
         env:
-          AWS_ACCESS_KEY_ID: AKIATAVAATYPZUOCJJPA
-          AWS_SECRET_ACCESS_KEY: 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
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
 
+      # Step 8: Apply Frontend Kubernetes Config
       - name: Apply Frontend Kubernetes Config
         run: |
           kubectl apply -f k8s/frontend-deployment.yaml
         env:
-          AWS_ACCESS_KEY_ID: AKIATAVAATYPZUOCJJPA
-          AWS_SECRET_ACCESS_KEY: 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
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
