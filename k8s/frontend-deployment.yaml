@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: 743383062694.dkr.ecr.us-east-2.amazonaws.com/frontend
+          image: 743383062694.dkr.ecr.us-east-2.amazonaws.com/frontend --validate=false
           ports:
             - containerPort: 80
 ---

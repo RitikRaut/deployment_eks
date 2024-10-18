@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: 743383062694.dkr.ecr.us-east-2.amazonaws.com/backend
+          image: 743383062694.dkr.ecr.us-east-2.amazonaws.com/backend --validate=false
           ports:
             - containerPort: 5000
           imagePullPolicy: Always
